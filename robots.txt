@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://mauriciolinsol59-sudo.github.io/nexomates/sitemap.xml
