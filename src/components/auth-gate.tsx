@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import * as AuthSession from 'expo-auth-session';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
@@ -17,7 +17,9 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const redirectUri = AuthSession.makeRedirectUri({ scheme: 'nexoestudio' });
+  const redirectUri = Platform.OS === 'web'
+    ? AuthSession.makeRedirectUri({ path: 'nexomates' })
+    : AuthSession.makeRedirectUri({ scheme: 'nexoestudio' });
   const [request, response, promptAsync] = Google.useAuthRequest({
     webClientId: CLIENT_ID || 'google-client-id-not-configured.apps.googleusercontent.com',
     responseType: AuthSession.ResponseType.Token,
