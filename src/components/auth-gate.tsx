@@ -26,7 +26,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
     scopes: ['openid', 'email', 'profile'],
     redirectUri,
     extraParams: { prompt: 'select_account' },
-  }, discovery);
+  });
 
   useEffect(() => { setProfile(readProfile()); }, []);
   useEffect(() => {
