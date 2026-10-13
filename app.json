@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "Nexo",
+    "slug": "nexo-estudio",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/favicon.png",
+    "scheme": "nexoestudio",
+    "userInterfaceStyle": "dark",
+    "android": {
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0D1112",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 76
+        }
+      ],
+      "expo-web-browser"
+    ],
+    "experiments": {
+      "baseUrl": "/nexomates",
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}
