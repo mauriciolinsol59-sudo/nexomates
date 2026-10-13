@@ -12,6 +12,7 @@ on:
       - 'favicon.ico'
       - '_expo/**'
       - 'assets/node_modules/**'
+  workflow_dispatch:
 
 permissions:
   contents: write
