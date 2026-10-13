@@ -24,6 +24,9 @@ type HelpMessage = {
   senderName: string;
   text: string;
   audioUrl?: string;
+  fileUrl?: string;
+  fileName?: string;
+  mimeType?: string;
   createdAt: string;
 };
 
@@ -56,6 +59,7 @@ function ChatThread({ requestId, clientId, name }: { requestId: string; clientId
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const [sendingVoice, setSendingVoice] = useState(false);
+  const [sendingFile, setSendingFile] = useState(false);
   const [chatError, setChatError] = useState('');
 
   const loadMessages = useCallback(async () => {
@@ -140,6 +144,34 @@ function ChatThread({ requestId, clientId, name }: { requestId: string; clientId
     input.click();
   };
 
+  const sendAttachment = async (file: File) => {
+    if (file.size > 50 * 1024 * 1024) { setChatError('El archivo debe pesar menos de 50 MB.'); return; }
+    setSendingFile(true);
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      form.append('senderId', clientId);
+      form.append('senderName', name.trim() || 'Estudiante');
+      form.append('originalName', file.name);
+      const response = await fetch(API + '/requests/' + requestId + '/attachments', { method: 'POST', body: form });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'No se pudo enviar el archivo.');
+      setChatError('');
+      await loadMessages();
+    } catch (error) {
+      setChatError(error instanceof Error ? error.message : 'No se pudo enviar el archivo.');
+    } finally { setSendingFile(false); }
+  };
+
+  const chooseAttachment = () => {
+    if (typeof document === 'undefined') { setChatError('Abre Nexo en el navegador del teléfono para adjuntar un archivo.'); return; }
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*,video/*,audio/*,.pdf,.txt,.csv,.zip,.doc,.docx,.xls,.xlsx,.ppt,.pptx';
+    input.onchange = () => { const file = input.files?.[0]; if (file) void sendAttachment(file); };
+    input.click();
+  };
+
   return (
     <View style={styles.chat}>
       <Text style={styles.chatTitle}>CHAT PARA COORDINAR</Text>
@@ -147,7 +179,7 @@ function ChatThread({ requestId, clientId, name }: { requestId: string; clientId
       {messages.length === 0 ? <Text style={styles.firstMessage}>Saluda y acuerden cómo repasar juntos.</Text> : messages.slice(-12).map((message) => (
         <View key={message.id} style={[styles.messageBubble, message.senderId === clientId ? styles.myMessage : styles.theirMessage]}>
           <Text style={styles.messageAuthor}>{message.senderId === clientId ? 'Tú' : message.senderName}</Text>
-          {message.audioUrl ? createElement('audio', { src: message.audioUrl, controls: true, style: { width: 220, height: 34 } }) : <Text style={styles.messageText}>{message.text}</Text>}
+          {message.audioUrl ? createElement('audio', { src: message.audioUrl, controls: true, style: { width: 220, height: 34 } }) : message.fileUrl ? <Pressable onPress={() => { if (typeof window !== 'undefined') window.open(message.fileUrl, '_blank'); }}><Text style={styles.fileLink}>📎 {message.fileName || 'Descargar archivo'}</Text></Pressable> : <Text style={styles.messageText}>{message.text}</Text>}
         </View>
       ))}
       {chatError ? <Text style={styles.chatError}>{chatError}</Text> : null}
@@ -159,6 +191,9 @@ function ChatThread({ requestId, clientId, name }: { requestId: string; clientId
       </View>
       <Pressable disabled={sendingVoice} onPress={chooseVoiceNote} style={[styles.voiceButton, sendingVoice && styles.disabledButton]}>
         <Text style={styles.voiceButtonText}>{sendingVoice ? 'Enviando audio…' : '🎙 Grabar o adjuntar nota de voz'}</Text>
+      </Pressable>
+      <Pressable disabled={sendingFile} onPress={chooseAttachment} style={[styles.voiceButton, sendingFile && styles.disabledButton]}>
+        <Text style={styles.voiceButtonText}>{sendingFile ? 'Subiendo archivo…' : '📎 Adjuntar foto, video o archivo'}</Text>
       </Pressable>
     </View>
   );
@@ -383,6 +418,7 @@ const styles = StyleSheet.create({
   theirMessage: { alignSelf: 'flex-start', backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line },
   messageAuthor: { color: '#A5B1A9', fontSize: 8, fontWeight: '800', marginBottom: 2 },
   messageText: { color: colors.ink, fontSize: 11, lineHeight: 16 },
+  fileLink: { color: '#D2F0B1', fontSize: 11, lineHeight: 17, textDecorationLine: 'underline' },
   chatError: { color: '#F0B08A', fontSize: 9 },
   composer: { flexDirection: 'row', alignItems: 'flex-end', gap: 7, marginTop: 3 },
   messageInput: { flex: 1, minHeight: 38, maxHeight: 90, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line, borderRadius: 11, paddingHorizontal: 10, paddingVertical: 8, color: colors.ink, fontSize: 11 },

@@ -30,6 +30,16 @@ const MEDIA_EXTENSIONS = {
   'audio/wav': '.wav',
   'audio/x-wav': '.wav',
   'audio/ogg': '.ogg',
+  'application/pdf': '.pdf',
+  'text/plain': '.txt',
+  'text/csv': '.csv',
+  'application/zip': '.zip',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': '.pptx',
+  'application/msword': '.doc',
+  'application/vnd.ms-excel': '.xls',
+  'application/vnd.ms-powerpoint': '.ppt',
 };
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -52,6 +62,16 @@ const MIME_TYPES = {
   '.aac': 'audio/aac',
   '.wav': 'audio/wav',
   '.ogg': 'audio/ogg',
+  '.pdf': 'application/pdf',
+  '.txt': 'text/plain; charset=utf-8',
+  '.csv': 'text/csv; charset=utf-8',
+  '.zip': 'application/zip',
+  '.doc': 'application/msword',
+  '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  '.xls': 'application/vnd.ms-excel',
+  '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  '.ppt': 'application/vnd.ms-powerpoint',
+  '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
   '.woff': 'font/woff',
   '.woff2': 'font/woff2',
 };
@@ -196,7 +216,7 @@ const server = createServer(async (request, response) => {
   }
 
   const url = new URL(request.url || '/', 'http://localhost');
-  const mediaMatch = url.pathname.match(/^\/media\/([\w-]+\.(?:jpg|png|webp|gif|mp4|webm|mov|3gp|m4a|mp3|aac|wav|ogg))$/i);
+  const mediaMatch = url.pathname.match(/^\/media\/([\w-]+\.(?:jpg|png|webp|gif|mp4|webm|mov|3gp|m4a|mp3|aac|wav|ogg|pdf|txt|csv|zip|doc|docx|xls|xlsx|ppt|pptx))$/i);
   if (mediaMatch && request.method === 'GET') {
     const mediaPath = resolve(MEDIA_DIR, mediaMatch[1]);
     if (!existsSync(mediaPath)) {
@@ -325,6 +345,36 @@ const server = createServer(async (request, response) => {
       sendJson(response, 201, { message });
     } catch (error) {
       sendJson(response, 400, { error: error instanceof Error ? error.message : 'No se pudo enviar la nota de voz.' });
+    }
+    return;
+  }
+
+  const attachmentMatch = url.pathname.match(/^\/api\/requests\/([\w-]+)\/attachments$/);
+  if (attachmentMatch && request.method === 'POST') {
+    let file;
+    try {
+      file = await parseMediaUpload(request, ['image/', 'video/', 'audio/', 'application/pdf', 'application/zip', 'application/msword', 'application/vnd.', 'text/plain', 'text/csv'], 50 * 1024 * 1024);
+      const item = requests.find((entry) => entry.id === attachmentMatch[1]);
+      const senderId = String(file.fields.senderId || '').slice(0, 80);
+      if (!item || item.status !== 'claimed' || (senderId !== item.clientId && senderId !== item.helperId)) {
+        unlinkSync(resolve(MEDIA_DIR, file.filename));
+        sendJson(response, item ? 403 : 404, { error: 'Los archivos solo están disponibles para quienes participan en la ayuda.' });
+        return;
+      }
+      const originalName = String(file.fields.originalName || 'archivo').replace(/[\\/\r\n\0]/g, '').slice(0, 120);
+      const message = {
+        id: randomUUID(), senderId,
+        senderName: String(file.fields.senderName || 'Estudiante').trim().slice(0, 40),
+        text: '', fileUrl: '/media/' + file.filename, fileName: originalName,
+        mimeType: file.mimeType, createdAt: new Date().toISOString(),
+      };
+      item.messages ||= [];
+      item.messages.push(message);
+      item.messages = item.messages.slice(-500);
+      saveRequests();
+      sendJson(response, 201, { message });
+    } catch (error) {
+      sendJson(response, 400, { error: error instanceof Error ? error.message : 'No se pudo enviar el archivo.' });
     }
     return;
   }
