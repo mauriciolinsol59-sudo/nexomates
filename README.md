@@ -19,7 +19,11 @@ En la computadora que alojará la app:
 
 3. Abre en cada teléfono la dirección de Wi-Fi que imprime el servidor. La computadora y los teléfonos deben seguir en la misma red; deja el servidor encendido.
 
-La interfaz está pensada para teléfonos y usa modo oscuro de forma predeterminada. En la barra inferior encontrarás Inicio, Ayuda y Actividades.\n\nLas solicitudes se comparten y actualizan entre dispositivos automáticamente. Si alguien acepta ayudar, solo esa persona y quien publicó la duda ven el chat privado, que permite texto y notas de voz. Las notas se guardan en `data/media/` y sus mensajes en `data/requests.json` en la computadora anfitriona. La captura directa de audio depende del navegador; en algunos teléfonos se podrá grabar desde el selector del sistema y en otros elegir un audio existente.\n\nEn Actividades cualquier persona conectada puede publicar una foto o video con un comentario. Los archivos se guardan en `data/media/` y las publicaciones en `data/activities.json`. Las cargas admiten hasta 100 MB por foto o video y 20 MB por nota de voz.
+La interfaz está pensada para teléfonos y usa modo oscuro de forma predeterminada. En la barra inferior encontrarás Inicio, Ayuda y Actividades.
+
+Las solicitudes se comparten y actualizan entre dispositivos automáticamente. Si alguien acepta ayudar, solo esa persona y quien publicó la duda ven el chat privado, que permite texto y notas de voz. Las notas se guardan en `data/media/` y sus mensajes en `data/requests.json` en la computadora anfitriona. La captura directa de audio depende del navegador; en algunos teléfonos se podrá grabar desde el selector del sistema y en otros elegir un audio existente.
+
+En Actividades cualquier persona conectada puede publicar una foto o video con un comentario. Los archivos se guardan en `data/media/` y las publicaciones en `data/activities.json`. Las cargas admiten hasta 100 MB por foto o video y 20 MB por nota de voz.
 
 Si Windows pregunta por el acceso de red, permite Node.js en redes privadas. No hace falta habilitar redes públicas.
 
